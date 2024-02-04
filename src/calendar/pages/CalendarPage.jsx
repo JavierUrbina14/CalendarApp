@@ -1,25 +1,22 @@
-import { Navbar } from "../";
+import { CalendarEvent, FabAddNewEvent, Navbar } from "../";
 import { Calendar } from 'react-big-calendar';
-import { addHours } from "date-fns";
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { localizer, getMessagesES } from "../../helpers";
+import { useState } from "react";
+import { CalendarModal } from "../components/CalendarModal";
+import { useUiStore, useCalendarStore } from "../../hooks";
+import { FabDeleteEvent } from "../components/FabDeleteEvent";
 
 export const CalendarPage = () => {
 
+    const [lastView, setLastView] = useState(localStorage.getItem('lastView') || 'month')
 
-    const myEventsList = [{
-        title: 'cumpleaños del jefe',
-        notes: 'hay que comprar el pastel',
-        start: new Date(),
-        end: addHours(new Date(), 2),
-        bgColor: '#fafafa',
-        user: {
-            _id: '123',
-            name: 'Javier',
-        }
-    }]
 
-    const eventStyleGetter = (event, start, end, isSelected) => {
+    const { openDateModal } = useUiStore();
+    const { events, setActiveEvent } = useCalendarStore();
+
+
+    const eventStyleGetter = () => {
         const style = {
             backgroundColor: '#367CF7',
             borderRadius: '0px',
@@ -32,19 +29,42 @@ export const CalendarPage = () => {
         }
     }
 
+    const onDoubleClick = () => {
+        openDateModal();
+    }
+    const onSelect = ( event ) => {
+        setActiveEvent(event)
+    }
+
+    const onViewChange = ( event ) => {
+        localStorage.setItem( 'lastView', event )
+        setLastView(event)
+    }
+
     return (
         <>
             <Navbar />
             <Calendar
                 culture="es"
                 localizer={localizer}
-                events={myEventsList}
+                events={events}
+                defaultView={lastView}
                 startAccessor="start"
                 endAccessor="end"
                 style={{ height: 'calc(100vh - 80px' }}
                 messages={getMessagesES()}
                 eventPropGetter={eventStyleGetter}
+                components={{
+                    event: CalendarEvent
+                }}
+                onDoubleClickEvent={onDoubleClick}
+                onSelectEvent={onSelect}
+                onView={onViewChange}
+                
             />
+            <CalendarModal />
+            <FabAddNewEvent />
+            <FabDeleteEvent />
         </>
     )
 }
